@@ -2,27 +2,31 @@
 
 ## Product
 
-Financial Metrics Dashboard: a dashboard for reviewing income, expenses, profit, and profit margin, with monthly charts. It currently uses deterministic generated sample movements; it is not connected to a real financial data provider.
+The README describes a financial metrics dashboard. The current screen in `frontend/src/App.tsx` displays income/outcome KPIs and monthly charts, with calculations in `frontend/src/lib/financial-utils.ts`.
+
+The API in `backend/app/routes.py` generates synthetic financial movements. It is not connected to a live financial provider or database; do not describe the sample values as real or persistent financial data.
 
 ## Tech Stack
 
-- Frontend: React, TypeScript, Vite, Tailwind CSS, and Recharts.
-- Backend: FastAPI and Pydantic, served by Uvicorn; debugpy is enabled in the Docker image.
-- Local orchestration: Docker Compose defines `frontend` and `backend`. The frontend's Vite config proxies `/api` requests to `backend:8000`.
-- Tests: Vitest for frontend utilities; pytest and FastAPI `TestClient` for backend routes.
+- Frontend: TypeScript and React (`frontend/package.json` declares React `^19.2.4`), Vite `^8.0.4`, Tailwind CSS `^4.2.2`, Recharts `^3.8.1`, and `lucide-react` `^1.8.0`. Vitest, ESLint, and TypeScript provide test, lint, and build tooling.
+- Backend: Python with FastAPI, Pydantic, and Uvicorn; `debugpy` is enabled by `backend/Dockerfile`.
+- Containers: `docker-compose.yml` defines `frontend` and `backend`. The Dockerfiles use Node 24 Alpine and Python 3.13 slim. Vite proxies `/api` to `http://backend:8000`; Compose publishes frontend port 5173, backend port 8000, and debugpy port 5678.
+- Tests: Vitest for frontend utilities; pytest and FastAPI `TestClient` for backend routes. Frontend scripts are `npm test`, `npm run lint`, and `npm run build`.
 
 ## Current Status
 
-- The dashboard fetches `/api/metrics` and computes its KPIs and monthly chart data in the frontend. Additional backend analytics routes exist but are not currently used by the dashboard screen.
-- The sample API generates 360 seeded movements, with dates based on the current date. On 2026-10-30, the observed API range was 2025-10-02 through 2026-09-28.
-- The dashboard period label now derives its month range from returned movements; empty data and fetch failures use neutral status labels instead of a misleading fixed year.
-- The period formatter has focused Vitest coverage for empty input and unsorted cross-year data. The monthly-summary route test also verifies chronological periods.
-- Phase 1 mapping and HTTP smoke checks are recorded in the root `verification.md`; Docker Compose and key API paths were confirmed working. Visual browser rendering has not been checked.
+- `frontend/src/App.tsx` fetches `/api/metrics` and computes KPI and monthly chart values in the frontend. The backend also exposes facets, summaries, top categories, comparisons, alerts, and B2B/B2C routes; the current dashboard screen does not call those analytics routes.
+- `generate_mock_movements(seed=42)` creates 360 movements using `date.today()`. The observed range on 2026-10-30 was 2025-10-02 through 2026-09-28; this is a dated observation, not a fixed range guarantee.
+- The displayed period is derived from returned movement dates. `computeMonthlyData` groups `YYYY-MM-DD` dates by their year-month string, avoiding timezone-dependent local date conversion.
+- Phase 1 Compose and HTTP smoke-check results are recorded in `verification.md`. The dashboard has not had a visual browser verification.
+- Phase 3 validation on 2026-10-31: backend route tests passed (16 tests); frontend tests passed (8 tests), and frontend lint/build passed. The build reported a JavaScript chunk over its 500 kB advisory threshold.
+- Installing the locked frontend dependencies for Phase 3 reported 26 npm audit findings, including 8 high-severity findings. These findings have not been triaged; verify the current audit report before making dependency changes.
 
-## Session Handoff (2026-10-31)
+## Next Checks
 
-- Workspace is on branch `main` with a clean worktree. Recent commits: `e25950e` (Phase 1 verification trail) and `f4e7a77` (agent rules, project memory, rule-guided fix, and tests). Commits are local; check remote state before pushing.
-- Frontend period label was changed to derive its range from `/api/metrics` movement dates. `formatPeriodLabel` is covered for empty input and unsorted cross-year data.
-- Verification passed: focused Vitest (7 tests), frontend build, frontend lint, and the focused monthly-summary pytest. Build has a large-chunk advisory; pytest has a Starlette/httpx deprecation warning.
-- To start the documented services, run `docker compose up --build`; confirm current port mappings with `docker compose ps`. The last known mappings were frontend `5173`, backend `8000`, and debugpy `5678`.
-- Suggested resume point: visually inspect the dashboard and charts in a browser; that was not verified in this session. The full conversation should remain available in VS Code chat history, but this file is a summary rather than a transcript.
+- Visually inspect the dashboard and charts in a browser; this remains unverified.
+- Review the npm audit findings using the current lockfile before any dependency upgrade.
+
+## Handoff
+
+Phase 2 engineering findings are in `phase-2-engineering-findings.md`; project-specific contributor guidance is in `.agents/rules/`. This file is a project summary, not a chat transcript; full chat availability depends on the VS Code chat history feature.
