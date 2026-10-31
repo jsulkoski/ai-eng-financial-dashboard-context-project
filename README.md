@@ -49,6 +49,31 @@ If you need to target a different backend origin, copy `frontend/.env.example` t
 - Backend: http://localhost:8000
 - API documentation: http://localhost:8000/docs
 
+## Developer guide
+
+- [Architecture and API reference](./docs/architecture.md): data flow, API routes, calculation ownership, and test commands.
+- [Project memory](./memory-bank/project.md): verified product, stack, and current status.
+- [Verification trail](./verification.md): corrections and dated checks against source and the running stack.
+- [Backend rules](./.agents/rules/backend.md) and [frontend rules](./.agents/rules/frontend.md): project-specific contributor guidance.
+
+## Run tests
+
+From the repository root, run backend tests in Docker:
+
+```bash
+docker compose run --rm backend pytest -q
+```
+
+For frontend checks, install dependencies and run the existing scripts:
+
+```bash
+cd frontend
+npm ci
+npm test
+npm run lint
+npm run build
+```
+
 ---
 
 This and many other projects are built by students as part of the [Career Programs](https://4geeksacademy.com/compare-programs) at [4Geeks Academy](https://4geeksacademy.com). By [@marcogonzalo](https://github.com/marcogonzalo) and [other contributors](https://github.com/4GeeksAcademy/ai-eng-financial-dashboard-context-project/graphs/contributors). Find out more about [AI Engineering](https://4geeksacademy.com/en/coding-bootcamps/ai-engineering), [Data Science & Machine Learning](https://4geeksacademy.com/en/coding-bootcamps/data-science-ml), [Cybersecurity](https://4geeksacademy.com/en/coding-bootcamps/cybersecurity) and [Full-Stack Software Developer with AI](https://4geeksacademy.com/en/coding-bootcamps/full-stack-developer).

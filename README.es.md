@@ -49,6 +49,31 @@ Si necesitas apuntar a otro backend, copia `frontend/.env.example` como `.env` y
 - Backend: http://localhost:8000
 - Documentación API: http://localhost:8000/docs
 
+## Guía para desarrolladores
+
+- [Arquitectura y referencia de API](./docs/architecture.md): flujo de datos, rutas de API, lógica de cálculos y comandos de pruebas (disponible en inglés).
+- [Memoria del proyecto](./memory-bank/project.md): producto, stack y estado actual verificados.
+- [Registro de verificación](./verification.md): correcciones y comprobaciones fechadas contra el código y los servicios.
+- [Reglas del backend](./.agents/rules/backend.md) y [reglas del frontend](./.agents/rules/frontend.md): convenciones específicas del proyecto.
+
+## Ejecutar las pruebas
+
+Desde la raíz del repositorio, ejecuta las pruebas del backend en Docker:
+
+```bash
+docker compose run --rm backend pytest -q
+```
+
+Para verificar el frontend, instala las dependencias y ejecuta los scripts existentes:
+
+```bash
+cd frontend
+npm ci
+npm test
+npm run lint
+npm run build
+```
+
 ---
 
 Este y muchos otros proyectos son construidos por estudiantes como parte de los [Coding Bootcamps](https://4geeksacademy.com/) de 4Geeks Academy. Encuentra más acerca de los [cursos](https://4geeksacademy.com/es/comparar-programas) de [Ingeniería de IA](https://4geeksacademy.com/es/coding-bootcamps/ingenieria-ia), [Data Science & Machine Learning](https://4geeksacademy.com/es/coding-bootcamps/curso-datascience-machine-learning), [Ciberseguridad](https://4geeksacademy.com/es/coding-bootcamps/curso-ciberseguridad) y [Full-Stack Software Developer con IA](https://4geeksacademy.com/es/coding-bootcamps/programador-full-stack).
