@@ -20,9 +20,10 @@ These findings are retained because each is tied to a concrete implementation, t
   **Risk:** Treating observed dates or values as permanent, live, or persisted data can produce misleading UI and documentation.
   **Proposed rule:** Describe the current backend as deterministic generated sample data; date-range observations must be labeled as runtime observations, not fixed API guarantees.
 
-- **Finding:** The backend movement model uses Python `date`, serialized as a date-only value. `computeMonthlyData` in `frontend/src/lib/financial-utils.ts` parses `create_date` with `new Date(...)` and reads local year/month.
-  **Risk:** JavaScript interprets ISO date-only strings as UTC, so local getters in some time zones can group a movement into the previous month.
+- **Finding (Phase 2 baseline):** The backend movement model uses Python `date`, serialized as a date-only value. At the time of this finding, `computeMonthlyData` parsed `create_date` with `new Date(...)` and read local year/month.
+  **Risk:** JavaScript interprets ISO date-only strings as UTC, so local getters in some time zones grouped a movement into the previous month.
   **Proposed rule:** Handle `create_date` as a calendar date, not a timestamp; avoid timezone-dependent month grouping and add a boundary regression test when changing this logic.
+  **Phase 3 validation:** `2025-01-01` reproduced as `Dec 2024` under `America/Los_Angeles`. The implementation now groups directly from the `YYYY-MM-DD` value, and the same timezone-specific test passes.
 
 - **Finding:** `filter_movements_by_date` uses inclusive `>=` and `<=` comparisons, and movement-list routes sort by `create_date`. The route tests assert range-edge inclusion and sorted B2B/B2C results.
   **Risk:** A filter or ordering change can silently omit edge-day records or destabilize chart periods.
