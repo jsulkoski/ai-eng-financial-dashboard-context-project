@@ -4,6 +4,7 @@ import {
   computeKPIs,
   computeMonthlyData,
   formatCurrency,
+  formatPeriodLabel,
   formatPercent,
 } from "./financial-utils";
 import type { FinancialMovement } from "./financial-types";
@@ -100,6 +101,24 @@ describe("computeMonthlyData", () => {
       outcome: 0,
       profitPercent: 100,
     });
+  });
+});
+
+describe("formatPeriodLabel", () => {
+  it("formats the actual range for unsorted cross-year movements", () => {
+    const unsortedCrossYearMovements = [
+      { ...sampleMovements[0], create_date: "2026-01-08" },
+      { ...sampleMovements[1], create_date: "2025-12-05" },
+      { ...sampleMovements[2], create_date: "2025-11-03" },
+    ];
+
+    expect(formatPeriodLabel(unsortedCrossYearMovements)).toBe(
+      "Nov 2025 - Jan 2026",
+    );
+  });
+
+  it("returns a neutral label when there is no data", () => {
+    expect(formatPeriodLabel([])).toBe("No data");
   });
 });
 

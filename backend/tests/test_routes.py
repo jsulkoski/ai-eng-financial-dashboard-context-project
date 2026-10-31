@@ -124,6 +124,8 @@ def test_metrics_summary_by_month_returns_balances():
     assert response.status_code == 200
     payload = response.json()
     assert payload
+    periods = [item["period"] for item in payload]
+    assert periods == sorted(periods)
     first = payload[0]
     assert set(first.keys()) == {"period", "income", "outcome", "net"}
     assert all(item["income"] >= 0 for item in payload)
