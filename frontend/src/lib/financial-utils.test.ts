@@ -62,6 +62,24 @@ describe("computeKPIs", () => {
 });
 
 describe("computeMonthlyData", () => {
+  it("keeps date-only values in their calendar month", () => {
+    const newYearMovement: FinancialMovement[] = [
+      {
+        ...sampleMovements[0],
+        create_date: "2025-01-01",
+      },
+    ];
+
+    expect(computeMonthlyData(newYearMovement)).toEqual([
+      {
+        month: "Jan 2025",
+        income: 1000,
+        outcome: 0,
+        profitPercent: 100,
+      },
+    ]);
+  });
+
   it("returns chronological year-month points with aggregated totals", () => {
     const unsortedCrossYearMovements: FinancialMovement[] = [
       {

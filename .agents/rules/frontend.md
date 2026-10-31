@@ -1,8 +1,18 @@
-# Frontend Rules
+# Frontend Dashboard Rules
 
-- Treat the backend response as the dashboard's data source. `frontend/src/App.tsx` fetches `/api/metrics`; `frontend/src/lib/mock-data.ts` exists but is not imported by the screen. Do not silently switch between these sources.
-- Keep the `FinancialMovement` shape and its enum values aligned with the backend model in `backend/app/routes.py`. The frontend declares the interface and unions in `frontend/src/lib/financial-types.ts`; changing either side of the API contract requires checking both.
-- Keep financial aggregation and date-label logic in `frontend/src/lib/financial-utils.ts`. It already owns `computeKPIs` and `computeMonthlyData`; update the colocated `financial-utils.test.ts` when changing those behaviors.
-- Treat `create_date` as a date-only value (`YYYY-MM-DD`), not a timestamp. `computeMonthlyData` currently passes it to `new Date(...)` and then reads local year/month, which can shift a date into the prior month in some time zones; avoid timezone-dependent grouping and add a regression test when changing date handling.
-- Derive displayed periods from returned data rather than hard-coding calendar dates. The backend generates dates relative to the current date, while `App.tsx` previously labeled the view `2024 - Full Year`.
-- Use the existing frontend scripts and avoid adding dependencies for small changes: `npm test -- <test-file>` runs Vitest, `npm run lint` runs ESLint, and `npm run build` type-checks and builds.
+## Scope
+
+Applies to dashboard data loading, financial calculations, date formatting, and UI components under `frontend/src/`, especially `App.tsx`, `lib/financial-types.ts`, and `lib/financial-utils.ts`.
+
+## Rationale
+
+`App.tsx` fetches `/api/metrics`; the separate `lib/mock-data.ts` is not used by the dashboard. KPI and monthly calculations live in `lib/financial-utils.ts`, with colocated Vitest coverage. Backend `create_date` values are calendar dates serialized as `YYYY-MM-DD`, not timestamps.
+
+## Guidance
+
+- Use the backend response as the dashboard data source. Do not silently switch to `lib/mock-data.ts`.
+- Keep `FinancialMovement` and its enum values aligned with `backend/app/routes.py` and `lib/financial-types.ts`; check both sides when changing the API contract.
+- Keep KPI, monthly aggregation, and period-label logic in `lib/financial-utils.ts`. Update `lib/financial-utils.test.ts` when changing those behaviors.
+- Treat `create_date` as a calendar date, not a timestamp. Do not group it through timezone-dependent local date getters; add a regression test for date and year boundaries when changing date handling.
+- Derive the displayed period from returned movements. The API uses `date.today()`, so a hard-coded calendar range becomes stale.
+- Prefer the existing frontend scripts over new dependencies for routine validation: `npm test -- <test-file>`, `npm run lint`, and `npm run build`.

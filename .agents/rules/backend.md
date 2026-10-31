@@ -1,7 +1,17 @@
-# Backend Rules
+# Backend API Rules
 
-- Keep API contracts explicit. `backend/app/routes.py` uses Pydantic response models, `Literal` types, and FastAPI `Query` parameters; preserve these validation and response-shape conventions when extending routes.
-- The current API is backed by generated sample data, not a database. `generate_mock_movements(seed=42)` creates the records; movement-list endpoints return them in chronological order. Do not imply that these values come from a live financial system or introduce persistence without a task requiring it.
-- Preserve the date-filter contract: `filter_movements_by_date` includes both `start_date` and `end_date` (`>=` / `<=`), and movement-list routes sort results chronologically. `test_filter_movements_by_date_includes_range_edges` and the B2B/B2C route tests assert these behaviors.
-- Keep API enum values synchronized with the frontend unions in `frontend/src/lib/financial-types.ts`: backend `OperationType`, `Category`, `BusinessType`, and `GroupBy` are `Literal` types in this module, while the first three are also declared in TypeScript. The facets and filtering tests in `backend/tests/test_routes.py` cover the accepted values.
-- Add or update route coverage in `backend/tests/test_routes.py`, which uses FastAPI `TestClient` and pytest. Run the focused backend tests after route or contract changes.
+## Scope
+
+Applies to API routes, response models, generated financial data, and backend route tests, primarily in `backend/app/routes.py` and `backend/tests/test_routes.py`.
+
+## Rationale
+
+`routes.py` defines the FastAPI contract with Pydantic response models, `Literal` types, and `Query` parameters. Its sample records are generated from a fixed seed but use `date.today()`, so record values are not live financial data and their date range changes over time.
+
+## Guidance
+
+- Keep request parameters and response shapes explicit with the existing Pydantic, `Literal`, and `Query` patterns. Unsupported enum values should remain rejected by FastAPI validation.
+- When changing `FinancialMovement` fields or enum values, update the corresponding declarations in `frontend/src/lib/financial-types.ts` and cover the contract in `backend/tests/test_routes.py`.
+- Treat `generate_mock_movements(seed=42)` as generated sample data, not a live provider or persistent store. Preserve chronological movement-list results.
+- Preserve inclusive date bounds: `filter_movements_by_date` includes both `start_date` and `end_date`. If changing this contract, update its range-edge test and route coverage.
+- Add route tests beside the implementation using the existing pytest and FastAPI `TestClient` patterns. Run the focused backend route tests after route or contract changes.
