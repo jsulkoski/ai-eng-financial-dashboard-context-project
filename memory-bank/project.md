@@ -16,7 +16,9 @@ The API in `backend/app/routes.py` generates synthetic financial movements. It i
 ## Current Status
 
 - `frontend/src/App.tsx` fetches `/api/metrics` and computes KPI and monthly chart values in the frontend. The backend also exposes facets, summaries, top categories, comparisons, alerts, and B2B/B2C routes; the current dashboard screen does not call those analytics routes.
-- `generate_mock_movements(seed=42)` creates 360 movements using `date.today()`. The observed range on 2026-10-30 was 2025-10-02 through 2026-09-28; this is a dated observation, not a fixed range guarantee.
+- `generate_mock_movements(seed=42)` creates 360 movements using `date.today()`. Observed ranges: 2025-10-02 through 2026-09-28 on 2026-10-30, and 2025-11-01 through 2026-10-28 on 2026-11-15. The range moves daily; it is not a fixed guarantee.
+- Frontend specifications for three planned features (date range filter, anomaly alerts table, B2B vs B2C comparison) are in `frontend/specs/` on branch `feature/frontend-specs`. They are verified against `/openapi.json`; type-check with `cd frontend/specs && npx tsc --noEmit`. They are not implemented yet.
+- `GET /api/metrics/alerts` `baseline_average` is the mean of all earlier periods within the requested range, not a rolling window. Inverted date ranges return `200 []` rather than 422 on every endpoint checked.
 - The displayed period is derived from returned movement dates. `computeMonthlyData` groups `YYYY-MM-DD` dates by their year-month string, avoiding timezone-dependent local date conversion.
 - Phase 1 Compose and HTTP smoke-check results are recorded in `verification.md`. The dashboard has not had a visual browser verification.
 - Phase 3 validation on 2026-10-31: backend route tests passed (16 tests); frontend tests passed (8 tests), and frontend lint/build passed. The build reported a JavaScript chunk over its 500 kB advisory threshold.
