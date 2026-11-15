@@ -96,7 +96,7 @@ Rendering rules:
 | Element | Rule |
 |---|---|
 | Start input | `<input type="date">` labelled "Start date". `value={value.start_date ?? ''}`. Set `min`/`max` to `availableRange.min_date`/`max_date` when available (this guides the picker but doesn't block typed values). |
-| End input | `<input type="date">` labelled "End date". `value={value.end_date ?? ''}`. Set `min` to `value.start_date ?? availableRange.min_date` and `max` to `availableRange.max_date`. |
+| End input | `<input type="date">` labelled "End date". `value={value.end_date ?? ''}`. Set `min` to `value.start_date ?? availableRange.min_date` and `max` to `availableRange.max_date`. If `availableRange` is `null`, omit only the facets-derived attributes. `min={value.start_date}` still applies when a start date is set. |
 | Both empty | Valid. No date parameters are sent and the dashboard shows all data. Hide the active-range text and disable Clear. |
 | Only one date set | Valid. Send only that parameter (verified as open-ended in the API). The active-range text reads `Showing data from 2026-09-01` or `Showing data through 2025-11-30`. |
 | Both set and `start ≤ end` | Valid. Both parameters are sent and both bounds are inclusive. Text: `Showing data between 2026-01-01 and 2026-03-31` (all active-range text is `Showing data {formatRangeLabel(value)}`). |
@@ -121,7 +121,7 @@ interface AvailableRangeHintProps {
 |---|---|
 | `'loading'` | `Skeleton` (`h-4 w-48`) |
 | `'ready'` | `Available data: 2025-11-01 – 2026-10-28` (raw `YYYY-MM-DD`, matching the input format) |
-| `'error'` | Muted text `Available date range unavailable`. The inputs stay enabled without `min`/`max`. |
+| `'error'` | Muted text `Available date range unavailable`. The inputs stay enabled without facets-derived `min`/`max`. |
 
 ### Existing components with filtered data (no prop changes)
 
@@ -130,7 +130,7 @@ interface AvailableRangeHintProps {
 | Loading | unchanged ("Loading period...") | `loading` | `loading` skeletons |
 | Movements returned | `formatPeriodLabel(movements)` | `computeKPIs(movements)` | `computeMonthlyData(movements)` |
 | `[]` (no movements in range) | `"No data"` | `$0` values | Existing "No data available to display" |
-| Request error | `"Period unavailable"` | `metrics={null}` | Empty. The existing error banner is shown. |
+| Request error | `"Period unavailable"` | `metrics={null}` | Empty. The existing error banner and its current copy are shown unchanged. Translating it is out of scope. |
 
 ---
 
@@ -158,8 +158,13 @@ interface AnomalyAlertsSectionProps {
   appliedThreshold: number
   /** Range used for the rows currently shown; same object as Feature 1's `appliedRange`. */
   appliedRange: DateRangeFilter
-  /** Number of months with movements in `appliedRange` (`computeMonthlyData(movements).length`). */
-  monthsInRange: number
+  /**
+   * Months with movements in `appliedRange` (`computeMonthlyData(movements).length` from Feature 1's
+   * metrics response). `null` while that metrics request is loading or after it failed; then the
+   * "Not enough data" rule is skipped.
+   */
+  monthsInRange: number | null
+  /** `true` while the alerts request OR Feature 1's metrics request is in flight. */
   loading?: boolean
   /** `true` when the last alerts request failed. */
   error?: boolean
@@ -182,6 +187,14 @@ Request: `GET /api/metrics/alerts` with
 `AlertsParams = { threshold: appliedThreshold, group_by: 'month', ...appliedRange }`. Don't
 send `business_type`. Refetch when `appliedThreshold` or `appliedRange` changes.
 
+`appliedThreshold` and `appliedRange` change independently:
+- If the threshold input is invalid and the user changes the dates to a valid range, alerts
+  still refetch, using the last `appliedThreshold`.
+- If the date range is invalid and the user types a valid threshold, alerts refetch with the
+  last `appliedRange`.
+
+The description and empty-state text always show the applied values, not the raw input text.
+
 ### `ThresholdInput`
 
 File: `src/components/dashboard/threshold-input.tsx`.
@@ -193,13 +206,15 @@ interface ThresholdInputProps {
   onChange: (next: string) => void
   /** Validation message or `null`. */
   error: string | null
+  /** Threshold currently in effect; drives the helper text. */
+  appliedThreshold: number
 }
 ```
 
 | Rule | Value |
 |---|---|
 | Element | `<input type="number" inputMode="decimal" min="0.01" max="1" step="0.01">` labelled "Spike threshold (ratio)" |
-| Helper text | `0.30 = flag months 30% above baseline` (computed from the current valid value) |
+| Helper text | `{appliedThreshold.toFixed(2)} = flag months {formatPercent(appliedThreshold * 100)} above baseline`, e.g. `0.30 = flag months 30.0% above baseline`. Always uses `appliedThreshold`, so it stays visible and correct while the input is invalid. |
 | Valid | `Number(value)` is finite and `0.01 ≤ n ≤ 1.0`. This is a UI-only limit; the API accepts any value `≥ 0`. |
 | Invalid | Empty, not a number, `< 0.01`, or `> 1.0`. Show `Enter a ratio between 0.01 and 1.00.` with `role="alert"`. Don't request; the table keeps the last valid results. |
 | Apply | 300 ms after the last keystroke, if valid: `appliedThreshold = Number(value)` |
@@ -215,7 +230,8 @@ interface AnomalyAlertsTableProps {
   rows: AlertEntry[]
   appliedThreshold: number
   appliedRange: DateRangeFilter
-  monthsInRange: number
+  /** See `AnomalyAlertsSectionProps.monthsInRange`; `null` skips the "Not enough data" rule. */
+  monthsInRange: number | null
   loading?: boolean
   error?: boolean
 }
@@ -236,7 +252,7 @@ Conditional body (checked in this order; each one renders a single row spanning 
 |---|---|
 | `loading` | 3 skeleton rows |
 | `error` | `Could not load spending anomalies. Try again later.` |
-| `monthsInRange < 2` | `Not enough data: at least two months are needed to compare against a baseline.` (The API never flags the first month.) |
+| `monthsInRange !== null && monthsInRange < 2` | `Not enough data: at least two months are needed to compare against a baseline.` (The API never flags the first month.) |
 | `rows.length === 0` | **Empty state:** `No spending anomalies above {formatPercent(appliedThreshold * 100)} for {formatRangeLabel(appliedRange)}.` |
 | otherwise | one row per `AlertEntry` |
 
@@ -256,7 +272,10 @@ There is no router in `package.json`, so don't add one. `App` derives the view f
 
 ### `DashboardNav`
 
-File: `src/components/dashboard/dashboard-nav.tsx`. Rendered above `DashboardHeader` on both views.
+File: `src/components/dashboard/dashboard-nav.tsx`. Rendered at the top of both views. On the home
+view it sits above `DashboardHeader`. The comparison view does **not** render `DashboardHeader`,
+because its `period` prop is derived from movements, which this page doesn't load; it uses the
+page title instead.
 
 ```ts
 type DashboardView = 'overview' | 'b2b-vs-b2c'
@@ -285,7 +304,7 @@ Requests: two parallel calls to `GET /api/metrics/categories/top`, one with
 and one with the same object but `business_type: 'B2C'`.
 
 Layout, top to bottom:
-1. Page title "B2B vs B2C revenue"
+1. `DashboardNav current="b2b-vs-b2c"`, then the page title `<h1>` "B2B vs B2C revenue"
 2. `DateRangeFilterBar` with `label="Comparison date range"`
 3. `<div class="grid grid-cols-1 gap-4 md:grid-cols-2">` containing two `BusinessLineTopCategoriesPanel`s, B2B on the left and B2C on the right
 4. `BusinessLineIncomeChart` at full width
@@ -349,6 +368,8 @@ interface BusinessLineIncomeTotal {
 interface BusinessLineIncomeChartProps {
   /** Always two items, in order B2B, B2C. */
   data: [BusinessLineIncomeTotal, BusinessLineIncomeTotal]
+  /** Range used for the empty-state copy. */
+  appliedRange: DateRangeFilter
   loading?: boolean
   /** Business lines whose request failed; empty array when none. */
   failed: BusinessType[]
