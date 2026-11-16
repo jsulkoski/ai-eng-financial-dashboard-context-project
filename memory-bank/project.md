@@ -26,8 +26,17 @@ The API in `backend/app/routes.py` generates synthetic financial movements. It i
 
 ## Next Checks
 
-- Visually inspect the dashboard and charts in a browser; this remains unverified.
+- Re-run the dashboard browser checks in an environment with Chromium's Linux runtime libraries installed. On 2026-11-16, Playwright could not launch because `libatk-1.0.so.0` is missing; browser and visual verification therefore remain unverified.
 - Review the npm audit findings using the current lockfile before any dependency upgrade.
+
+## Accessibility and Agent Skills (2026-11-16)
+
+- Applied the repository's accessibility skill guidance to the dashboard: a visible-on-focus skip link, clear loading status, an error alert outside the busy main region, focus-visible styling, semantic chart headings/regions, and screen-reader data tables. Decorative icons and skeletons are hidden from assistive technology. Empty chart arrays have an explicit empty state; non-empty all-zero data still renders so visual and tabular representations remain consistent.
+- Added static document title, description, and theme-color metadata in `frontend/index.html`. Vercel's React best-practices skill was reviewed, but this is a Vite SPA rather than Next.js; no Next.js-only image/font/server-rendering changes were introduced. The existing large-chunk build advisory remains unaddressed because no measured optimization justified changing primary chart loading.
+- Discovered the additional `anthropics/skills@webapp-testing` skill via `npx skills find testing` and installed it under `.agents/skills/webapp-testing`; its Playwright guidance informs `.skills/dashboard-qa/SKILL.md`. `skills-lock.json` records the installed skills. `AGENTS.md` now tells agents to discover both shared `.agents/skills` and internal `.skills`.
+- Frontend verification on 2026-11-16: `npm test` passed (8 tests), `npm run lint` passed, and `npm run build` passed with a Vite advisory for a 586.40 kB minified JS chunk (175.59 kB gzip). Compose smoke checks returned HTTP 200 for the frontend and API; the API returned 360 generated movements with the expected data shape.
+- Browser verification was attempted with Python Playwright against the running frontend, but Chromium could not start because the environment lacks `libatk-1.0.so.0`. The first attempt also had a sync/async syntax error and did not execute. Do not report screenshots, keyboard behavior, mobile layout, screen-reader behavior, or browser-console results as verified until a successful browser run. Static checks and HTTP smoke checks are not substitutes for that verification.
+- Financial definitions and date semantics remain those in `frontend/src/lib/financial-utils.ts`: income/outcome sums, profit as income minus outcome, margin as profit divided by income (zero when income is zero), year-month grouping by the date-only string, zero-decimal USD display, and one-decimal percentage display. API values remain synthetic, not live or persistent.
 
 ## Handoff
 
