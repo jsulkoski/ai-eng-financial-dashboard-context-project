@@ -62,21 +62,26 @@ export function ProfitPercentChart({ data, loading }: ProfitPercentChartProps) {
     )
   }
 
-  const hasData = data.some((d) => d.profitPercent !== 0)
+  const isEmpty = data.length === 0
 
   return (
-    <Card className="border-border/60">
+    <Card
+      role="region"
+      aria-labelledby="profit-margin-title"
+      aria-describedby="profit-margin-description"
+      className="border-border/60"
+    >
       <CardHeader className="pb-4">
-        <CardTitle className="text-base font-semibold">Profit Margin %</CardTitle>
-        <CardDescription>Monthly profit as a percentage of total income</CardDescription>
+        <CardTitle id="profit-margin-title" className="text-base font-semibold">Profit Margin %</CardTitle>
+        <CardDescription id="profit-margin-description">Monthly profit as a percentage of total income</CardDescription>
       </CardHeader>
       <CardContent>
-        {!hasData ? (
+        {isEmpty ? (
           <div className="flex h-[280px] items-center justify-center text-muted-foreground text-sm">
-            No data available to display
+            No monthly data available
           </div>
         ) : (
-          <ResponsiveContainer width="100%" height={280}>
+          <ResponsiveContainer width="100%" height={280} aria-hidden="true">
             <LineChart data={data} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" strokeOpacity={0.6} />
               <XAxis
@@ -107,6 +112,27 @@ export function ProfitPercentChart({ data, loading }: ProfitPercentChartProps) {
             </LineChart>
           </ResponsiveContainer>
         )}
+        {!isEmpty ? (
+          <div className="sr-only">
+            <table>
+              <caption>Monthly profit margin. Monthly profit as a percentage of total income.</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Month</th>
+                  <th scope="col">Profit margin</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.map((point) => (
+                  <tr key={point.month}>
+                    <th scope="row">{point.month}</th>
+                    <td>{point.profitPercent.toFixed(1)}%</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : null}
       </CardContent>
     </Card>
   )

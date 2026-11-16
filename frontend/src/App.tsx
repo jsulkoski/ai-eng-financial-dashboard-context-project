@@ -41,7 +41,7 @@ function App() {
       .catch(() => {
         setPeriod("Period unavailable");
         setError(
-          "No se pudo cargar la informacion financiera. Revisa la API de backend.",
+          "Unable to load financial data. Please check that the backend API is available.",
         );
       })
       .finally(() => {
@@ -50,31 +50,45 @@ function App() {
   }, []);
 
   return (
-    <main className="dark min-h-screen bg-background text-foreground">
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="flex flex-col gap-8">
-          <DashboardHeader period={period} />
-
-          {error ? (
-            <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive-foreground">
+    <>
+      <a className="skip-link" href="#main-content">
+        Skip to main content
+      </a>
+      <div className="sr-only" role="status">
+        {loading ? "Loading financial data…" : ""}
+      </div>
+      <div className="dark min-h-screen bg-background text-foreground">
+        {error ? (
+          <div className="mx-auto max-w-7xl px-4 pt-8 sm:px-6 lg:px-8">
+            <div
+              role="alert"
+              className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive-foreground"
+            >
               {error}
             </div>
-          ) : null}
+          </div>
+        ) : null}
+        <main id="main-content" tabIndex={-1} aria-busy={loading}>
+          <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+            <div className="flex flex-col gap-8">
+              <DashboardHeader period={period} />
 
-          <section aria-label="Key performance indicators">
-            <KPIRow metrics={metrics} loading={loading} />
-          </section>
+              <section aria-label="Key performance indicators">
+                <KPIRow metrics={metrics} loading={loading} />
+              </section>
 
-          <section
-            aria-label="Financial charts"
-            className="grid grid-cols-1 gap-4 xl:grid-cols-2"
-          >
-            <IncomeOutcomeChart data={monthlyData} loading={loading} />
-            <ProfitPercentChart data={monthlyData} loading={loading} />
-          </section>
-        </div>
+              <section
+                aria-label="Financial charts"
+                className="grid grid-cols-1 gap-4 xl:grid-cols-2"
+              >
+                <IncomeOutcomeChart data={monthlyData} loading={loading} />
+                <ProfitPercentChart data={monthlyData} loading={loading} />
+              </section>
+            </div>
+          </div>
+        </main>
       </div>
-    </main>
+    </>
   );
 }
 

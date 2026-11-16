@@ -61,21 +61,26 @@ export function IncomeOutcomeChart({ data, loading }: IncomeOutcomeChartProps) {
     )
   }
 
-  const hasData = data.some((d) => d.income > 0 || d.outcome > 0)
+  const isEmpty = data.length === 0
 
   return (
-    <Card className="border-border/60">
+    <Card
+      role="region"
+      aria-labelledby="income-outcome-title"
+      aria-describedby="income-outcome-description"
+      className="border-border/60"
+    >
       <CardHeader className="pb-4">
-        <CardTitle className="text-base font-semibold">Income vs. Outcome</CardTitle>
-        <CardDescription>Monthly revenue and expenditure evolution</CardDescription>
+        <CardTitle id="income-outcome-title" className="text-base font-semibold">Income vs. Outcome</CardTitle>
+        <CardDescription id="income-outcome-description">Monthly revenue and expenditure evolution</CardDescription>
       </CardHeader>
       <CardContent>
-        {!hasData ? (
+        {isEmpty ? (
           <div className="flex h-[280px] items-center justify-center text-muted-foreground text-sm">
-            No data available to display
+            No monthly data available
           </div>
         ) : (
-          <ResponsiveContainer width="100%" height={280}>
+          <ResponsiveContainer width="100%" height={280} aria-hidden="true">
             <LineChart data={data} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" strokeOpacity={0.6} />
               <XAxis
@@ -111,6 +116,7 @@ export function IncomeOutcomeChart({ data, loading }: IncomeOutcomeChartProps) {
                 dataKey="outcome"
                 name="outcome"
                 stroke="var(--chart-outcome)"
+                strokeDasharray="6 3"
                 strokeWidth={2}
                 dot={{ r: 3, fill: 'var(--chart-outcome)', strokeWidth: 0 }}
                 activeDot={{ r: 5, strokeWidth: 0 }}
@@ -118,6 +124,29 @@ export function IncomeOutcomeChart({ data, loading }: IncomeOutcomeChartProps) {
             </LineChart>
           </ResponsiveContainer>
         )}
+        {!isEmpty ? (
+          <div className="sr-only">
+            <table>
+              <caption>Monthly income and outcome. Monthly revenue and expenditure evolution.</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Month</th>
+                  <th scope="col">Income</th>
+                  <th scope="col">Outcome</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.map((point) => (
+                  <tr key={point.month}>
+                    <th scope="row">{point.month}</th>
+                    <td>{formatCurrency(point.income)}</td>
+                    <td>{formatCurrency(point.outcome)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : null}
       </CardContent>
     </Card>
   )

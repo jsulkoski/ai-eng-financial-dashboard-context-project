@@ -5,8 +5,7 @@ Agents working on this project **must**:
 - Look for **work instructions and rules** in the directory:  
   `./.agents/rules`
 
-- Look for available **agent skills** in the directory:  
-  `./.agents/skills`
+- Look for available **agent skills** in `./.agents/skills` and internal project skills in `./.skills`.
 
 - Look for the **project memory bank** in:  
   `./memory-bank`  

@@ -16,7 +16,9 @@ The API in `backend/app/routes.py` generates synthetic financial movements. It i
 ## Current Status
 
 - `frontend/src/App.tsx` fetches `/api/metrics` and computes KPI and monthly chart values in the frontend. The backend also exposes facets, summaries, top categories, comparisons, alerts, and B2B/B2C routes; the current dashboard screen does not call those analytics routes.
-- `generate_mock_movements(seed=42)` creates 360 movements using `date.today()`. The observed range on 2026-10-30 was 2025-10-02 through 2026-09-28; this is a dated observation, not a fixed range guarantee.
+- `generate_mock_movements(seed=42)` creates 360 movements using `date.today()`. Observed ranges: 2025-10-02 through 2026-09-28 on 2026-10-30, and 2025-11-01 through 2026-10-28 on 2026-11-15. The range moves daily; it is not a fixed guarantee.
+- Frontend specifications for three planned features (date range filter, anomaly alerts table, B2B vs B2C comparison) are in `frontend/specs/` on branch `feature/frontend-specs`. They are verified against `/openapi.json`; type-check with `cd frontend/specs && npx tsc --noEmit`. They are not implemented yet.
+- `GET /api/metrics/alerts` `baseline_average` is the mean of all earlier periods within the requested range, not a rolling window. Inverted date ranges return `200 []` rather than 422 on every endpoint checked.
 - The displayed period is derived from returned movement dates. `computeMonthlyData` groups `YYYY-MM-DD` dates by their year-month string, avoiding timezone-dependent local date conversion.
 - Phase 1 Compose and HTTP smoke-check results are recorded in `verification.md`. The dashboard has not had a visual browser verification.
 - Phase 3 validation on 2026-10-31: backend route tests passed (16 tests); frontend tests passed (8 tests), and frontend lint/build passed. The build reported a JavaScript chunk over its 500 kB advisory threshold.
@@ -24,8 +26,17 @@ The API in `backend/app/routes.py` generates synthetic financial movements. It i
 
 ## Next Checks
 
-- Visually inspect the dashboard and charts in a browser; this remains unverified.
 - Review the npm audit findings using the current lockfile before any dependency upgrade.
+
+## Accessibility and Agent Skills (2026-11-16)
+
+- Applied the repository's accessibility skill guidance to the dashboard: a visible-on-focus skip link, clear loading status, an error alert outside the busy main region, focus-visible styling, semantic chart headings/regions, and screen-reader data tables. Decorative icons and skeletons are hidden from assistive technology. Empty chart arrays have an explicit empty state; non-empty all-zero data still renders so visual and tabular representations remain consistent.
+- Added static document title, description, and theme-color metadata in `frontend/index.html`. Vercel's React best-practices skill was reviewed, but this is a Vite SPA rather than Next.js; no Next.js-only image/font/server-rendering changes were introduced. The existing large-chunk build advisory remains unaddressed because no measured optimization justified changing primary chart loading.
+- Discovered the additional `anthropics/skills@webapp-testing` skill via `npx skills find testing` and installed it under `.agents/skills/webapp-testing`; its Playwright guidance informs `.skills/dashboard-qa/SKILL.md`. `skills-lock.json` records the installed skills. `AGENTS.md` now tells agents to discover both shared `.agents/skills` and internal `.skills`.
+- Frontend verification on 2026-11-16: `npm test` passed (8 tests), `npm run lint` passed, and `npm run build` passed with a Vite advisory for a 586.40 kB minified JS chunk (175.59 kB gzip). Compose smoke checks returned HTTP 200 for the frontend and API; the API returned 360 generated movements with the expected data shape.
+- Browser verification was completed with headless Chromium 159 / Playwright against the running frontend after installing its missing Linux runtime dependencies. It verified loaded API-backed data and period, chart regions/tables (12 rows each), skip-link focus, API-failure messaging, zero browser/console errors, and no horizontal overflow at 375px and 320px. Browser screenshots and details are in `verification.md`. No screen-reader software was used, so assistive-technology verification remains outstanding.
+- The first successful browser run found and led to a fix for horizontal overflow from wide screen-reader tables: each semantic table now sits inside a clipped `.sr-only` wrapper. The document and body scroll widths match the viewport at both tested mobile widths.
+- Financial definitions and date semantics remain those in `frontend/src/lib/financial-utils.ts`: income/outcome sums, profit as income minus outcome, margin as profit divided by income (zero when income is zero), year-month grouping by the date-only string, zero-decimal USD display, and one-decimal percentage display. API values remain synthetic, not live or persistent.
 
 ## Handoff
 
