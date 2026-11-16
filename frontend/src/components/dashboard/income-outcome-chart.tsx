@@ -125,27 +125,27 @@ export function IncomeOutcomeChart({ data, loading }: IncomeOutcomeChartProps) {
           </ResponsiveContainer>
         )}
         {!isEmpty ? (
-          <>
-            <table className="sr-only">
-            <caption>Monthly income and outcome. Monthly revenue and expenditure evolution.</caption>
-            <thead>
-              <tr>
-                <th scope="col">Month</th>
-                <th scope="col">Income</th>
-                <th scope="col">Outcome</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.map((point) => (
-                <tr key={point.month}>
-                  <th scope="row">{point.month}</th>
-                  <td>{formatCurrency(point.income)}</td>
-                  <td>{formatCurrency(point.outcome)}</td>
+          <div className="sr-only">
+            <table>
+              <caption>Monthly income and outcome. Monthly revenue and expenditure evolution.</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Month</th>
+                  <th scope="col">Income</th>
+                  <th scope="col">Outcome</th>
                 </tr>
-              ))}
-            </tbody>
+              </thead>
+              <tbody>
+                {data.map((point) => (
+                  <tr key={point.month}>
+                    <th scope="row">{point.month}</th>
+                    <td>{formatCurrency(point.income)}</td>
+                    <td>{formatCurrency(point.outcome)}</td>
+                  </tr>
+                ))}
+              </tbody>
             </table>
-          </>
+          </div>
         ) : null}
       </CardContent>
     </Card>

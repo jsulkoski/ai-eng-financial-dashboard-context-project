@@ -1,5 +1,16 @@
 # Verification Trail
 
+## Dashboard accessibility and browser verification (2026-11-16)
+
+Checked against the running Docker Compose frontend and API using headless Chromium 159 / Playwright.
+
+- The first browser run uncovered horizontal overflow on narrow screens: the visually hidden chart tables themselves used the `sr-only` utility, whose absolute positioning allowed their intrinsic table width to expand the document. Wrapped each semantic table in a clipped `.sr-only` container instead. At 375px and 320px, both `document.documentElement.scrollWidth` and `document.body.scrollWidth` now equal the viewport width, and chart cards remain within the viewport.
+- Frontend and `GET /api/metrics` returned HTTP 200. The UI rendered an H1 and two H2 chart headings; both named chart regions resolved their `aria-labelledby` references; both semantic tables rendered 12 data rows. The visible period (`Nov 2025 - Oct 2026` in this run) matched the date range calculated from the API response (360 generated movements).
+- Keyboard check: the first Tab focused “Skip to main content”; Enter moved focus to `#main-content`.
+- API-failure check: aborting the metrics request showed the alert, displayed “Period unavailable”, cleared `aria-busy`, and did not leave stale chart tables.
+- No browser page errors or console errors were observed. Desktop (1440px), mobile (375px), and narrow mobile (320px) screenshots were captured during the run. Screen-reader software was not used; this is not a screen-reader certification.
+- Chromium initially could not start because the environment lacked `libatk-1.0.so.0`. Installed Playwright's Linux browser dependencies with `python -m playwright install --with-deps chromium`; Chromium then launched successfully. No repository dependency changes were needed for this environment setup.
+
 Checked against source and the running Compose stack on 2026-10-30.
 
 - **Wrong claim:** The dashboard displays 2024 data. **Correction:** `frontend/src/App.tsx` hardcodes the label `2024 - Full Year`, but `GET /api/metrics` returned 360 seeded movements dated 2025-10-02 through 2026-09-28. The observed range is runtime-dependent.
